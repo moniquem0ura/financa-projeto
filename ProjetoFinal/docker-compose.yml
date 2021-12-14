@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  db:
+   image: mysql
+   volumes:
+      - "dbdata:/var/lib/mysql"
+   container_name: db
+   environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_DATABASE=FINANCA
+      - MYSQL_USER=user_financa
+      - MYSQL_PASSWORD=financa@123
+   healthcheck:
+    test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$MYSQL_ROOT_PASSWORD' ]
+    start_period: 60s
+   ports:
+      - 3306:3306
+   networks: 
+     - financa-network  
+  web:
+    build: .
+    container_name: financa-api
+    restart: on-failure    
+    ports:
+      - 8080:8080
+    environment: 
+      - DATABASE_HOST=db  
+      - DATABASE_USER=user_financa
+      - DATABASE_NAME=financa
+      - DATABASE_PORT=3306
+    networks: 
+      - financa-network  
+    depends_on:
+     db:
+      condition: service_healthy   
+networks: 
+  financa-network:
+    driver: bridge
+volumes:
+   dbdata:    
